@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# update_setup version 1.0
+# This script will update all necessary files for personal projects from ThomasYeoLab/project_setup
+# This script is automatically updated and called in pre-push hook
+
+repo_dir=$(git rev-parse --show-toplevel)
+
+# Update scripts in update list
+script_list="workflows/pull_request_checks.yml"
+for script in $script_list; do
+    if [ ! -e "${repo_dir}/${script}" ]; then
+        wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/${script} -O ${repo_dir}/setup/${script}
+        git add ${repo_dir}/setup/${script}
+        git commit -m "Automatic commit: Add setup/${script}"
+        echo "setup/${script} is added."
+    else
+        wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/${script} -O ${repo_dir}/setup/${script}.new
+        if diff ${repo_dir}/setup/${script} ${repo_dir}/setup/${script}.new >/dev/null; then
+            rm ${repo_dir}/setup/${script}.new
+        else
+            rm ${repo_dir}/setup/${script}
+            mv ${repo_dir}/setup/${script}.new ${repo_dir}/setup/${script}
+            git add ${repo_dir}/setup/${script}
+            git commit -m "Automatic commit: Update setup/${script}"
+            echo "setup/${script}.yml is updated."
+        fi
+    fi
+done
+
+# Create symbolic links for workflows
+if [ ! -d "${repo_dir}/.github/workflows" ]; then
+    mkdir -p ${repo_dir}/.github/workflows
+fi
+
+if [ ! -e "${repo_dir}/.github/workflows/pull_request_checks.yml" ]; then
+    ln -s ${repo_dir}/setup/workflows/pull_request_checks.yml ${repo_dir}/.github/workflows/pull_request_checks.yml
+fi
+

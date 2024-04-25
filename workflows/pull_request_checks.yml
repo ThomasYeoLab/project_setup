@@ -1,0 +1,39 @@
+name: Pull Request Checks
+
+run-name: Check-PR#${{ github.event.pull_request.number }}-submitted-by-${{ github.triggering_actor }}
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+    branches:
+      - develop
+
+# Cancel previous checks and re-run the checks when new commits are pushed to the pull request
+concurrency:
+  group: ${{ github.triggering_actor }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks_before_merging:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: '0'
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v39
+      - name: List all changed files
+        run: |
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            echo "$file was changed"
+          done
+      - name: Run checks before merging
+        env:
+          # FORK_BRANCH: ${{ github.head_ref }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: |
+          echo "Example pull request checks, version 1.0"
