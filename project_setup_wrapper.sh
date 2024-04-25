@@ -48,6 +48,7 @@ ln -s ${repo_dir}/setup/hooks/pre-push ${repo_dir}/.git/hooks/pre-push
 
 echo "Update necessary files..."
 wget https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup -O ${repo_dir}/setup/update_setup
+chmod 755 ${repo_dir}/setup/update_setup
 
 git add .
 git commit -m "Initial setup of ${repo_name}"

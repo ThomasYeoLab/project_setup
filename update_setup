@@ -13,7 +13,7 @@ for script in $script_list; do
     if [ ! -d "${repo_dir}/setup/${script_dir}" ]; then
         mkdir -p ${repo_dir}/setup/${script_dir}
     fi
-    if [ ! -e "${repo_dir}/${script}" ]; then
+    if [ ! -e "${repo_dir}/setup/${script}" ]; then
         wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/${script} -O ${repo_dir}/setup/${script}
         git add ${repo_dir}/setup/${script}
         git commit -m "Automatic commit: Add setup/${script}"
