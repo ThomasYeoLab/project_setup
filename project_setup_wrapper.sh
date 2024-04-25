@@ -15,13 +15,13 @@ while getopts "d:" opt; do
     esac
 done
 
+repo_name=`basename ${repo_dir}`
 cd ${repo_dir}
 
 is_repo=$(git rev-parse --is-inside-work-tree 2>/dev/null)
 
 if [ "$is_repo" != "true" ]; then
     echo "The folder ${repo_dir} is not a Git repository. "
-    repo_name=`basename ${repo_dir}`
     git clone git@github.com:ThomasYeoLab/${repo_name}.git ${repo_dir}
     exit_status=$?
     if [ ! $exit_status -eq 0 ]; then
@@ -32,7 +32,7 @@ fi
 
 echo "Creating directory... "
 if [ ! -d "${repo_dir}/setup/hooks" ]; then
-    mkdir -p ${repo_dir}/setup
+    mkdir -p ${repo_dir}/setup/hooks
 fi
 if [ ! -d "${repo_dir}/unit_tests" ]; then
     mkdir -p ${repo_dir}/unit_tests
@@ -47,8 +47,12 @@ chmod 755 ${repo_dir}/setup/hooks/pre-push
 ln -s ${repo_dir}/setup/hooks/pre-push ${repo_dir}/.git/hooks/pre-push
 
 echo "Update necessary files..."
-wget https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup.sh -O ${repo_dir}/setup/update_setup.sh
-sh ${repo_dir}/setup/update_setup.sh
+wget https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup -O ${repo_dir}/setup/update_setup
+
+git add .
+git commit -m "Initial setup of ${repo_name}"
+
+sh ${repo_dir}/setup/update_setup
 
 echo "ThomasYeoLab/${repo_name} setup finished!"
 

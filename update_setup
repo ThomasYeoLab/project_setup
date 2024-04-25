@@ -9,6 +9,10 @@ repo_dir=$(git rev-parse --show-toplevel)
 # Update scripts in update list
 script_list="workflows/pull_request_checks.yml"
 for script in $script_list; do
+    script_dir=$(dirname "$script")
+    if [ ! -d "${repo_dir}/setup/${script_dir}" ]; then
+        mkdir -p ${repo_dir}/setup/${script_dir}
+    fi
     if [ ! -e "${repo_dir}/${script}" ]; then
         wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/${script} -O ${repo_dir}/setup/${script}
         git add ${repo_dir}/setup/${script}
