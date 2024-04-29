@@ -3,6 +3,10 @@
 # update_setup version 1.0
 # This script will update all necessary files for personal projects from ThomasYeoLab/project_setup
 # This script is automatically updated and called in pre-push hook
+# For manual updates with out push, simply use: 
+#   wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup 
+#        -O ${repo_dir}/setup/update_setup.new
+# And manually replace this file
 
 repo_dir=$(git rev-parse --show-toplevel)
 
