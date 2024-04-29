@@ -16,7 +16,7 @@ if [ ! -e "${repo_dir}/setup/update_setup" ]; then
     wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup -O ${repo_dir}/setup/update_setup
     chmod 755 ${repo_dir}/setup/update_setup
     git add ${repo_dir}/setup/update_setup
-    git commit -m "Automatic commit: Add setup/update_setup"
+    git commit -m "Automatic commit: Add setup/update_setup" --no-verify
     echo "setup/update_setup added."
 else
     wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup -O ${repo_dir}/setup/update_setup.new
@@ -27,7 +27,7 @@ else
         rm ${repo_dir}/setup/update_setup
         mv ${repo_dir}/setup/update_setup.new ${repo_dir}/setup/update_setup
         git add ${repo_dir}/setup/update_setup
-        git commit -m "Automatic commit: Update setup/update_setup"
+        git commit -m "Automatic commit: Update setup/update_setup" --no-verify
         echo "setup/update_setup is updated."
     fi
 fi

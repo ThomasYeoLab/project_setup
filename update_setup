@@ -20,7 +20,7 @@ for script in $script_list; do
     if [ ! -e "${repo_dir}/setup/${script}" ]; then
         wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/${script} -O ${repo_dir}/setup/${script}
         git add ${repo_dir}/setup/${script}
-        git commit -m "Automatic commit: Add setup/${script}"
+        git commit -m "Automatic commit: Add setup/${script}" --no-verify
         echo "setup/${script} is added."
     else
         wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/${script} -O ${repo_dir}/setup/${script}.new
@@ -30,7 +30,7 @@ for script in $script_list; do
             rm ${repo_dir}/setup/${script}
             mv ${repo_dir}/setup/${script}.new ${repo_dir}/setup/${script}
             git add ${repo_dir}/setup/${script}
-            git commit -m "Automatic commit: Update setup/${script}"
+            git commit -m "Automatic commit: Update setup/${script}" --no-verify
             echo "setup/${script}.yml is updated."
         fi
     fi
@@ -45,9 +45,9 @@ if [ -e "${repo_dir}/.github/workflows/pull_request_checks.yml" ]; then
     rm ${repo_dir}/.github/workflows/pull_request_checks.yml
     cp ${repo_dir}/setup/workflows/pull_request_checks.yml ${repo_dir}/.github/workflows/pull_request_checks.yml
     git add ${repo_dir}/.github/workflows/pull_request_checks.yml
-    git commit -m "Automatic commit: Update .github/workflows/pull_request_checks.yml"
+    git commit -m "Automatic commit: Update .github/workflows/pull_request_checks.yml" --no-verify
 else
     cp ${repo_dir}/setup/workflows/pull_request_checks.yml ${repo_dir}/.github/workflows/pull_request_checks.yml
     git add ${repo_dir}/.github/workflows/pull_request_checks.yml
-    git commit -m "Automatic commit: Add .github/workflows/pull_request_checks.yml"
+    git commit -m "Automatic commit: Add .github/workflows/pull_request_checks.yml" --no-verify
 fi
