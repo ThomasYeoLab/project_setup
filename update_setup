@@ -32,14 +32,18 @@ for script in $script_list; do
     fi
 done
 
-# Create symbolic links for workflows
+# Copy workflows files (symbolic link does not work for workflows)
 if [ ! -d "${repo_dir}/.github/workflows" ]; then
     mkdir -p ${repo_dir}/.github/workflows
 fi
 
-if [ ! -e "${repo_dir}/.github/workflows/pull_request_checks.yml" ]; then
-    ln -s ${repo_dir}/setup/workflows/pull_request_checks.yml ${repo_dir}/.github/workflows/pull_request_checks.yml
+if [ -e "${repo_dir}/.github/workflows/pull_request_checks.yml" ]; then
+    rm ${repo_dir}/.github/workflows/pull_request_checks.yml
+    cp ${repo_dir}/setup/workflows/pull_request_checks.yml ${repo_dir}/.github/workflows/pull_request_checks.yml
+    git add ${repo_dir}/.github/workflows/pull_request_checks.yml
+    git commit -m "Automatic commit: Update .github/workflows/pull_request_checks.yml"
+else
+    cp ${repo_dir}/setup/workflows/pull_request_checks.yml ${repo_dir}/.github/workflows/pull_request_checks.yml
     git add ${repo_dir}/.github/workflows/pull_request_checks.yml
     git commit -m "Automatic commit: Add .github/workflows/pull_request_checks.yml"
 fi
-
