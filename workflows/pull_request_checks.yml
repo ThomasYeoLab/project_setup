@@ -8,7 +8,7 @@ on:
       - opened
       - synchronize
     branches:
-      - develop
+      - main
 
 # Cancel previous checks and re-run the checks when new commits are pushed to the pull request
 concurrency:
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: '0'
+          fetch-depth: "0"
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v39
@@ -33,7 +33,8 @@ jobs:
           done
       - name: Run checks before merging
         env:
+          PROJ_DIR: ${{ github.workspace }}
           # FORK_BRANCH: ${{ github.head_ref }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
         run: |
-          echo "Example pull request checks, version 1.0"
+          bash ${PROJ_DIR}/setup/workflows/pr_checks.sh

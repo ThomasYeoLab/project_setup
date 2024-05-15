@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This is a wrapper script to setup your personal project repo. 
+# This is a wrapper script to setup your personal project repo.
 # You can download this single script and run. No need to clone the whole repo
 #
 # Input:
@@ -8,14 +8,16 @@
 
 while getopts "d:" opt; do
     case $opt in
-        d) repo_dir="$OPTARG"
+    d)
+        repo_dir="$OPTARG"
         ;;
-        \?) echo "Usage: cmd [-d] [-n](optional)"
+    \?)
+        echo "Usage: cmd [-d] [-n](optional)"
         ;;
     esac
 done
 
-repo_name=`basename ${repo_dir}`
+repo_name=$(basename ${repo_dir})
 cd ${repo_dir}
 
 is_repo=$(git rev-parse --is-inside-work-tree 2>/dev/null)
@@ -46,6 +48,11 @@ wget https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/hooks/pre
 chmod 755 ${repo_dir}/setup/hooks/pre-push
 ln -s ${repo_dir}/setup/hooks/pre-push ${repo_dir}/.git/hooks/pre-push
 
+echo "Setup pre-commit hook..."
+wget https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/hooks/pre-commit -O ${repo_dir}/setup/hooks/pre-commit
+chmod 755 ${repo_dir}/setup/hooks/pre-commit
+ln -s ${repo_dir}/setup/hooks/pre-commit ${repo_dir}/.git/hooks/pre-commit
+
 echo "Update necessary files..."
 wget https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup -O ${repo_dir}/setup/update_setup
 chmod 755 ${repo_dir}/setup/update_setup
@@ -56,4 +63,3 @@ git commit -m "Initial setup of ${repo_name}"
 sh ${repo_dir}/setup/update_setup
 
 echo "ThomasYeoLab/${repo_name} setup finished!"
-

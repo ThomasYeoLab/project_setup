@@ -3,14 +3,14 @@
 # update_setup version 1.0
 # This script will update all necessary files for personal projects from ThomasYeoLab/project_setup
 # This script is automatically updated and called in pre-push hook
-# For manual updates with out push, simply use: 
+# For manual updates with out push, simply use:
 #   wget -q https://raw.githubusercontent.com/ThomasYeoLab/project_setup/main/update_setup -O update_setup.new
 # And manually replace this file
 
 repo_dir=$(git rev-parse --show-toplevel)
 
 # Update scripts in update list
-script_list="workflows/pull_request_checks.yml"
+script_list=(workflows/pull_request_checks.yml workflows/pr_checks.sh hooks/pre-commit)
 for script in $script_list; do
     script_dir=$(dirname "$script")
     if [ ! -d "${repo_dir}/setup/${script_dir}" ]; then
@@ -30,7 +30,7 @@ for script in $script_list; do
             mv ${repo_dir}/setup/${script}.new ${repo_dir}/setup/${script}
             git add ${repo_dir}/setup/${script}
             git commit -m "Automatic commit: Update setup/${script}" --no-verify
-            echo "setup/${script}.yml is updated."
+            echo "setup/${script} is updated."
         fi
     fi
 done
