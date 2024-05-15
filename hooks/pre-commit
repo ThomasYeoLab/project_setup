@@ -4,7 +4,7 @@
 logfile=$(mktemp)
 
 ######
-# 1. (committed files)[.m, .c, .cpp, .sh, .csh, .py, .pl, .r]{stable_projects, utilities, data}
+# 1. (committed files)[.m, .c, .cpp, .sh, .csh, .py, .pl, .r]
 ######
 ###
 # Find the committed files that we want to check
@@ -16,7 +16,6 @@ files_to_be_committed=($(git diff --cached --name-status | awk '(($1 != "D") && 
 ###
 # do not check CBIG_ prefix for python scripts
 EXTENSIONS_TO_CHECK=("m" "c" "cpp" "sh" "csh" "pl" "r")
-DIRECTORIES_TO_CHECK=("stable_projects" "utilities" "data")
 EXCLUDED_FILES=("Surf2SurfGui.m" "Vol2SurfGui.m" "CBIG_tested_config.sh" "CBIG_tested_config.csh")
 
 PREFIX="CBIG_"
@@ -36,14 +35,10 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for $PREFIX prefix" | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name != $PREFIX* ]] && [[ $file_name == *.$ext ]]; then
-                    all_with_valid_prefixes=0
-                    echo "$file_path does not have a $PREFIX prefix, please fix it manually." | tee -a $logfile
-                fi
-            done
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name != $PREFIX* ]] && [[ $file_name == *.$ext ]]; then
+            all_with_valid_prefixes=0
+            echo "$file_path does not have a $PREFIX prefix, please fix it manually." | tee -a $logfile
         fi
     done
 done
@@ -53,11 +48,10 @@ if [ $all_with_valid_prefixes == 0 ]; then
 else
     echo "   [PASSED]" | tee -a $logfile
 fi
-
 ###
 # check whether committed files have the MIT license
 ###
-# include python scripts
+# python scripts will be checked later
 EXTENSIONS_TO_CHECK=("m" "c" "cpp" "sh" "csh" "pl" "r")
 
 mit_license="Written by [your name] and CBIG under MIT license: https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md"
@@ -76,24 +70,20 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for MIT license" | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name = *.$ext ]]; then
-                    license_line=$(grep "MIT license" $file_path)
-                    if [[ "$license_line" == "" ]]; then
-                        all_with_license=0
-                        echo "$file_path does not have a MIT license" | tee -a $logfile
-                    elif [[ "$license_line" == *"CBIG under MIT license: https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md" && "$license_line" == *"Written by"* ]]; then
-                        # do nothing
-                        :
-                    else
-                        all_with_license=0
-                        echo "$file_path does not follow our MIT license format: " | tee -a $logfile
-                        echo "$mit_license" | tee -a $logfile
-                    fi
-                fi
-            done
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name = *.$ext ]]; then
+            license_line=$(grep "MIT license" $file_path)
+            if [[ "$license_line" == "" ]]; then
+                all_with_license=0
+                echo "$file_path does not have a MIT license" | tee -a $logfile
+            elif [[ "$license_line" == *"CBIG under MIT license: https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md" && "$license_line" == *"Written by"* ]]; then
+                # do nothing
+                :
+            else
+                all_with_license=0
+                echo "$file_path does not follow our MIT license format: " | tee -a $logfile
+                echo "$mit_license" | tee -a $logfile
+            fi
         fi
     done
 done
@@ -126,21 +116,18 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for absolute paths." | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name = *.$ext ]]; then
-                    if [[ ! $file_name =~ "config" ]]; then
-                        for path_keyword in $abs_path_list; do
-                            abs_path=$(grep $path_keyword $file_path)
-                            if [[ ! "$abs_path" == "" ]] && [[ ! "$abs_path" == *"#"*$path_keyword* ]] && [[ ! "$abs_path" == *"%"*$path_keyword* ]] && [[ ! "$abs_path" == *"//"*$path_keyword* ]]; then
-                                all_without_abs_path=0
-                                echo "$file_path includes absolute path: $abs_path" | tee -a $logfile
-                            fi
-                        done
+
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name = *.$ext ]]; then
+            if [[ ! $file_name =~ "config" ]]; then
+                for path_keyword in $abs_path_list; do
+                    abs_path=$(grep $path_keyword $file_path)
+                    if [[ ! "$abs_path" == "" ]] && [[ ! "$abs_path" == *"#"*$path_keyword* ]] && [[ ! "$abs_path" == *"%"*$path_keyword* ]] && [[ ! "$abs_path" == *"//"*$path_keyword* ]]; then
+                        all_without_abs_path=0
+                        echo "$file_path includes absolute path: $abs_path" | tee -a $logfile
                     fi
-                fi
-            done
+                done
+            fi
         fi
     done
 done
@@ -171,21 +158,18 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for banned keywords." | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name = *.$ext ]]; then
-                    if [[ ! $file_name =~ "config" ]]; then
-                        for banword in $banword_list; do
-                            banword_line=$(grep $banword $file_path)
-                            if [[ ! "$banword_line" == "" ]] && [[ ! "$banword_line" == *"#"*$banword* ]] && [[ ! "$banword_line" == *"%"*$banword* ]] && [[ ! "$banword_line" == *"//"*$banword* ]]; then
-                                all_without_banword=0
-                                echo "$file_path includes banned keyword: $banword" | tee -a $logfile
-                            fi
-                        done
+
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name = *.$ext ]]; then
+            if [[ ! $file_name =~ "config" ]]; then
+                for banword in $banword_list; do
+                    banword_line=$(grep $banword $file_path)
+                    if [[ ! "$banword_line" == "" ]] && [[ ! "$banword_line" == *"#"*$banword* ]] && [[ ! "$banword_line" == *"%"*$banword* ]] && [[ ! "$banword_line" == *"//"*$banword* ]]; then
+                        all_without_banword=0
+                        echo "$file_path includes banned keyword: $banword" | tee -a $logfile
                     fi
-                fi
-            done
+                done
+            fi
         fi
     done
 done
@@ -214,20 +198,17 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for character limit" | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name = *.$ext ]]; then
-                    line_lengths=$(awk '{print length}' $file_path)
-                    i=1
-                    for line_length in ${line_lengths}; do
-                        if [ $line_length -gt 120 ]; then
-                            echo "$file_name: Line $i: has $line_length characters > 120 characters. Shorten it." | tee -a $logfile
-                            all_within_120=0
-                        fi
-                        i=$(($i + 1))
-                    done
+
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name = *.$ext ]]; then
+            line_lengths=$(awk '{print length}' $file_path)
+            i=1
+            for line_length in ${line_lengths}; do
+                if [ $line_length -gt 120 ]; then
+                    echo "$file_name: Line $i: has $line_length characters > 120 characters. Shorten it." | tee -a $logfile
+                    all_within_120=0
                 fi
+                i=$(($i + 1))
             done
         fi
     done
@@ -240,12 +221,11 @@ else
 fi
 
 ######
-# 2. (committed files)[.m]{stable_projects, utilities, data}
+# 2. (committed files)[.m]
 ######
 files_to_be_committed=($(git diff --cached --name-status | awk '(($1 != "D") && ($1 != "U")) {if ($1 ~ /^R/) print $3; else print $2}'))
 
 EXTENSIONS_TO_CHECK=("m")
-DIRECTORIES_TO_CHECK=("stable_projects" "utilities" "data")
 EXCLUDED_FILES=("Surf2SurfGui.m" "Vol2SurfGui.m" "CBIG_tested_config.sh" "CBIG_tested_config.csh" "tested_startup.m")
 
 ###
@@ -266,25 +246,22 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for rmpath" | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name == *.$ext ]]; then
-                    tmpfile=$(mktemp)
-                    grep addpath $file_path >$tmpfile
-                    while read addpath_match; do
-                        rmpath_line=${addpath_match//addpath/rmpath}
-                        rmpath_line_left_backslash=$(echo $rmpath_line | sed -e 's/[[]/\\\[/g')
-                        rmpath_line_backslash=$(echo $rmpath_line_left_backslash | sed -e 's/[]]/\\\]/g')
-                        rmpath_match=($(grep "$rmpath_line_backslash" $file_path))
-                        if [[ "$rmpath_match" == "" ]]; then
-                            all_with_valid_rmpath=0
-                            echo "$file_path does not have a '$rmpath_line' at the end, please fix it manually." | tee -a $logfile
-                        fi
-                    done <$tmpfile
-                    rm $tmpfile
+
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name == *.$ext ]]; then
+            tmpfile=$(mktemp)
+            grep addpath $file_path >$tmpfile
+            while read addpath_match; do
+                rmpath_line=${addpath_match//addpath/rmpath}
+                rmpath_line_left_backslash=$(echo $rmpath_line | sed -e 's/[[]/\\\[/g')
+                rmpath_line_backslash=$(echo $rmpath_line_left_backslash | sed -e 's/[]]/\\\]/g')
+                rmpath_match=($(grep "$rmpath_line_backslash" $file_path))
+                if [[ "$rmpath_match" == "" ]]; then
+                    all_with_valid_rmpath=0
+                    echo "$file_path does not have a '$rmpath_line' at the end, please fix it manually." | tee -a $logfile
                 fi
-            done
+            done <$tmpfile
+            rm $tmpfile
         fi
     done
 done
@@ -296,7 +273,7 @@ else
 fi
 
 ######
-# 3. (folders of committed files)[@xxx]{stable_projects, utilities, data}
+# 3. (folders of committed files)[@xxx]
 ######
 files_to_be_committed=($(git diff --cached --name-status | awk '(($1 != "D") && ($1 != "U")) {if ($1 ~ /^R/) print $3; else print $2}'))
 
@@ -307,8 +284,6 @@ for ((i = 0; i < cnt; i++)); do
 done
 unique_folders_to_be_committed=$(echo ${folders_to_be_committed[@]} | tr ' ' '\n' | sort -u | tr '\n' ' ')
 
-DIRECTORIES_TO_CHECK=("stable_projects" "utilities" "data")
-
 ###
 # check whether matlab classes have CBIG_ prefix
 ###
@@ -317,14 +292,10 @@ echo -e "\n==> [Check] Checking that matlab classes have $PREFIX prefix.." | tee
 
 all_with_valid_prefixes=1
 for folder in "${folders_to_be_committed[@]}"; do
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $folder == $directory/* ]] && [[ $folder == *@* ]]; then
-            if [[ $folder != *@${PREFIX}* ]]; then
-                all_with_valid_prefixes=0
-                echo "Matlab class $folder does not have a $PREFIX prefix, please fix it manually." | tee -a $logfile
-            fi
-        fi
-    done
+    if [[ $folder != *@${PREFIX}* ]]; then
+        all_with_valid_prefixes=0
+        echo "Matlab class $folder does not have a $PREFIX prefix, please fix it manually." | tee -a $logfile
+    fi
 done
 if [ $all_with_valid_prefixes == 0 ]; then
     echo "   [FAILED] There are Matlab classes without $PREFIX prefix. Abort committing." | tee -a $logfile
@@ -333,12 +304,11 @@ else
 fi
 
 ######
-# 4. (committed files)[.py]{stable_projects, utilities, data}
+# 4. (committed files)[.py]
 ######
 files_to_be_committed=($(git diff --cached --name-status | awk '(($1 != "D") && ($1 != "U")) {if ($1 ~ /^R/) print $3; else print $2}'))
 
 EXTENSIONS_TO_CHECK=("py")
-DIRECTORIES_TO_CHECK=("stable_projects" "utilities" "data")
 EXCLUDED_FILES=("Surf2SurfGui.m" "Vol2SurfGui.m" "CBIG_tested_config.sh" "CBIG_tested_config.csh" "tested_startup.m")
 
 # check mit license
@@ -357,29 +327,26 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for mit license" | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name = *.$ext ]]; then
-                    license_line_num=$(grep -n "MIT license" $file_path | cut -d : -f 1)
-                    link_line_num=$((${license_line_num} + 1))
-                    license_line=$(sed -n ${license_line_num}p $file_path)
-                    link_line=$(sed -n ${link_line_num}p $file_path)
-                    if [[ "$license_line" == "" ]]; then
-                        all_python_mit=0
-                        echo "$file_path does not have a MIT license" | tee -a $logfile
-                    elif [[ "$license_line" == *"CBIG under MIT license:" && "$license_line" == *"Written by"* &&
-                        "$link_line" == *"https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md" ]]; then
-                        # do nothing
-                        :
-                    else
-                        all_python_mit=0
-                        echo "$file_path does not follow our MIT license format: " | tee -a $logfile
-                        echo "Written by XXX and CBIG under MIT license:" | tee -a $logfile
-                        echo "https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md" | tee -a $logfile
-                    fi
-                fi
-            done
+
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name = *.$ext ]]; then
+            license_line_num=$(grep -n "MIT license" $file_path | cut -d : -f 1)
+            link_line_num=$((${license_line_num} + 1))
+            license_line=$(sed -n ${license_line_num}p $file_path)
+            link_line=$(sed -n ${link_line_num}p $file_path)
+            if [[ "$license_line" == "" ]]; then
+                all_python_mit=0
+                echo "$file_path does not have a MIT license" | tee -a $logfile
+            elif [[ "$license_line" == *"CBIG under MIT license:" && "$license_line" == *"Written by"* &&
+                "$link_line" == *"https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md" ]]; then
+                # do nothing
+                :
+            else
+                all_python_mit=0
+                echo "$file_path does not follow our MIT license format: " | tee -a $logfile
+                echo "Written by XXX and CBIG under MIT license:" | tee -a $logfile
+                echo "https://github.com/ThomasYeoLab/CBIG/blob/master/LICENSE.md" | tee -a $logfile
+            fi
         fi
     done
 done
@@ -406,20 +373,17 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked for pep8 format" | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name = *.$ext ]]; then
-                    yapf_output=$(PYTHONPATH=${CBIG_CODE_DIR}/external_packages/python/yapf-master \
-                        python ${CBIG_CODE_DIR}/external_packages/python/yapf-master/yapf -d ${file_path})
-                    if [ ! -z "$yapf_output" ]; then
-                        echo "$file_path does not follow yapf pep8 format please use following command to format it." | tee -a $logfile
-                        echo "PYTHONPATH=\${CBIG_CODE_DIR}/external_packages/python/yapf-master \
+
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name = *.$ext ]]; then
+            yapf_output=$(PYTHONPATH=${CBIG_CODE_DIR}/external_packages/python/yapf-master \
+                python ${CBIG_CODE_DIR}/external_packages/python/yapf-master/yapf -d ${file_path})
+            if [ ! -z "$yapf_output" ]; then
+                echo "$file_path does not follow yapf pep8 format please use following command to format it." | tee -a $logfile
+                echo "PYTHONPATH=\${CBIG_CODE_DIR}/external_packages/python/yapf-master \
 python \${CBIG_CODE_DIR}/external_packages/python/yapf-master/yapf -i ${file_path}" | tee -a $logfile
-                        all_yapf_format=0
-                    fi
-                fi
-            done
+                all_yapf_format=0
+            fi
         fi
     done
 done
@@ -446,25 +410,22 @@ for file_path in "${files_to_be_committed[@]}"; do
         echo "$file_name will not be checked by flake8" | tee -a $logfile
         continue
     fi
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $file_path == $directory/* ]] || [[ $file_path == $file_name ]]; then
-            for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-                if [[ $file_name = *.$ext ]]; then
-                    flake8_version=$(flake8 --version | cut -d " " -f 1)
-                    if [ "$flake8_version" != "3.7.7" ]; then
-                        echo "[FAILDED] You do not have flake8 or installed a different version" | tee -a $logfile
-                        echo "Please install flake8 3.7.7:" | tee -a $logfile
-                        echo "pip install flake8==3.7.7" | tee -a $logfile
-                        exit 1
-                    fi
-                    flake8_output=$(flake8 --count ${file_path})
-                    if [ "$flake8_output" != 0 ]; then
-                        echo "$file_path does not follow flake8. Please fix the errors and warnings" | tee -a $logfile
-                        flake8 --count ${file_path} | tee -a $logfile
-                        all_flake8_format=0
-                    fi
-                fi
-            done
+
+    for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
+        if [[ $file_name = *.$ext ]]; then
+            flake8_version=$(flake8 --version | cut -d " " -f 1)
+            if [ "$flake8_version" != "3.7.7" ]; then
+                echo "[FAILDED] You do not have flake8 or installed a different version" | tee -a $logfile
+                echo "Please install flake8 3.7.7:" | tee -a $logfile
+                echo "pip install flake8==3.7.7" | tee -a $logfile
+                exit 1
+            fi
+            flake8_output=$(flake8 --count ${file_path})
+            if [ "$flake8_output" != 0 ]; then
+                echo "$file_path does not follow flake8. Please fix the errors and warnings" | tee -a $logfile
+                flake8 --count ${file_path} | tee -a $logfile
+                all_flake8_format=0
+            fi
         fi
     done
 done
