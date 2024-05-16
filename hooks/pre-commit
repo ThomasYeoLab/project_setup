@@ -284,17 +284,16 @@ for ((i = 0; i < cnt; i++)); do
 done
 unique_folders_to_be_committed=$(echo ${folders_to_be_committed[@]} | tr ' ' '\n' | sort -u | tr '\n' ' ')
 
-###
-# check whether matlab classes have CBIG_ prefix
-###
 PREFIX="CBIG_"
 echo -e "\n==> [Check] Checking that matlab classes have $PREFIX prefix.." | tee -a $logfile
 
 all_with_valid_prefixes=1
 for folder in "${folders_to_be_committed[@]}"; do
-    if [[ $folder != *@${PREFIX}* ]]; then
-        all_with_valid_prefixes=0
-        echo "Matlab class $folder does not have a $PREFIX prefix, please fix it manually." | tee -a $logfile
+    if [[ $folder == *@* ]]; then
+        if [[ $folder != *@${PREFIX}* ]]; then
+            all_with_valid_prefixes=0
+            echo "Matlab class $folder does not have a $PREFIX prefix, please fix it manually." | tee -a $logfile
+        fi
     fi
 done
 if [ $all_with_valid_prefixes == 0 ]; then

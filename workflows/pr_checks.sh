@@ -1,5 +1,5 @@
 ######
-# 1. (different files between origin/develop and current branch)[.m, .sh, .csh]{utilities, stable_projects, data}
+# 1. (different files between origin/main and current branch)[.m, .sh, .csh]
 ######
 ###
 # Find the files that we want to check
@@ -7,7 +7,6 @@
 files_to_be_checked=$CHANGED_FILES
 
 EXTENSIONS_TO_CHECK=("m" "sh" "csh")
-DIRECTORIES_TO_CHECK=("utilities" "stable_projects" "data")
 EXCLUDED_FILES=("Surf2SurfGui.m" "Vol2SurfGui.m" "CBIG_tested_config.sh" "CBIG_tested_config.csh")
 
 ###
@@ -30,17 +29,14 @@ for file_path in "${files_to_be_checked[@]}"; do
     fi
 
     for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-        for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-            if [[ $file_path == $directory/* ]] && [[ $file_name == *.$ext ]]; then
-                echo -e "\n  ==> Checking ./$(realpath --relative-to=. $file_path)"
-                $CBIG_CODE_DIR/setup/check_function_format/CBIG_check_whether_function_used_in_other_functions_wrapper.sh \
-                    $file_path silent
-            fi
-        done
+        if [[ $file_name == *.$ext ]]; then
+            echo -e "\n  ==> Checking ./$(realpath --relative-to=. $file_path)"
+            $CBIG_CODE_DIR/setup/check_function_format/CBIG_check_whether_function_used_in_other_functions_wrapper.sh \
+                $file_path silent
+        fi
     done
 done
 echo "  [DONE]"
-
 ###
 # comments about replacing function name
 ###
@@ -51,13 +47,11 @@ echo ""
 
 ######
 # 2.  (different files between origin/develop and current branch)[.m, .sh, .csh]
-# {utilities, stable_projects, data, external_packages(exclude class folder @xxx)}
 ######
 unset files_to_be_checked
 files_to_be_checked=$CHANGED_FILES
 
 EXTENSIONS_TO_CHECK=("m" "sh" "csh")
-DIRECTORIES_TO_CHECK=("utilities" "stable_projects" "data" "external_packages")
 EXCLUDED_FILES=("Surf2SurfGui.m" "Vol2SurfGui.m" "CBIG_tested_config.sh" "CBIG_tested_config.csh")
 
 TARGET_DIRECTORIES=("utilities" "stable_projects" "data" "external_packages")
@@ -84,46 +78,43 @@ for file_path in "${files_to_be_checked[@]}"; do
     fi
 
     for ext in "${EXTENSIONS_TO_CHECK[@]}"; do
-        for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-            if [[ $file_path == $directory/* && $file_name == *.$ext &&
-                $file_path != *@* && $file_path != *matlab_bgl_mac64* ]]; then
-                echo -e "\n  ==> Checking ./$(realpath --relative-to=. $file_path)"
-                # find all matches of filename
-                all_matches=""
-                i=0
-                for target_dir in "${TARGET_DIRECTORIES[@]}"; do
-                    i=$((i + 1))
-                    matches=$(find $CBIG_CODE_DIR/$target_dir -type f -name "$file_name" ! \
-                        -samefile $CBIG_CODE_DIR/$file_path ! -path "*/@*/*" ! -path "*/matlab_bgl_mac64/*")
-                    if [[ $matches ]]; then
-                        if [ $i == 1 ]; then
-                            all_matches="$matches"
-                        else
-                            all_matches="$all_matches $matches"
-                        fi
-                    fi
-                done
-
-                if [[ ${all_matches} ]]; then
-                    # check all matches
-                    for match in "${all_matches[@]}"; do
-                        if [[ $match != */non_default_packages/* ]] && [[ $file_path != */non_default_packages/* ]]; then
-                            filename_with_conflict=1
-                        fi
-                        if [[ $match == */non_default_packages/* ]] || [[ $file_path == */non_default_packages/* ]]; then
-                            file_in_nondefault=1
-                        fi
-                        echo "$match"
-                    done
-                    if [[ $filename_with_conflict == 1 ]]; then
-                        echo "[FAILED] Abort pushing."
-                    fi
-                    if [[ $file_in_nondefault == 1 ]]; then
-                        echo "[WARNING] The user should discuss with the admin about how to handle the conflicts."
+        if [[ $file_name == *.$ext && $file_path != *@* && $file_path != *matlab_bgl_mac64* ]]; then
+            echo -e "\n  ==> Checking ./$(realpath --relative-to=. $file_path)"
+            # find all matches of filename
+            all_matches=""
+            i=0
+            for target_dir in "${TARGET_DIRECTORIES[@]}"; do
+                i=$((i + 1))
+                matches=$(find $CBIG_CODE_DIR/$target_dir -type f -name "$file_name" ! \
+                    -samefile $CBIG_CODE_DIR/$file_path ! -path "*/@*/*" ! -path "*/matlab_bgl_mac64/*")
+                if [[ $matches ]]; then
+                    if [ $i == 1 ]; then
+                        all_matches="$matches"
+                    else
+                        all_matches="$all_matches $matches"
                     fi
                 fi
+            done
+
+            if [[ ${all_matches} ]]; then
+                # check all matches
+                for match in "${all_matches[@]}"; do
+                    if [[ $match != */non_default_packages/* ]] && [[ $file_path != */non_default_packages/* ]]; then
+                        filename_with_conflict=1
+                    fi
+                    if [[ $match == */non_default_packages/* ]] || [[ $file_path == */non_default_packages/* ]]; then
+                        file_in_nondefault=1
+                    fi
+                    echo "$match"
+                done
+                if [[ $filename_with_conflict == 1 ]]; then
+                    echo "[FAILED] Abort pushing."
+                fi
+                if [[ $file_in_nondefault == 1 ]]; then
+                    echo "[WARNING] The user should discuss with the admin about how to handle the conflicts."
+                fi
             fi
-        done
+        fi
     done
 done
 if [ $filename_with_conflict == 0 -a $file_in_nondefault == 0 ]; then
@@ -131,16 +122,14 @@ if [ $filename_with_conflict == 0 -a $file_in_nondefault == 0 ]; then
 fi
 
 ######
-# 3.  (folders of different files between origin/develop and current branch)[@xxx]
-# {utilities, stable_projects, data, external_packages}
+# 3.  (folders of different files between origin/main and current branch)[@xxx]
 ######
 unset files_to_be_checked
 files_to_be_checked=$CHANGED_FILES
 
-DIRECTORIES_TO_CHECK=("utilities" "stable_projects" "data" "external_packages")
 TARGET_DIRECTORIES=("utilities" "stable_projects" "data" "external_packages")
 
-# find the folders of comitted files
+# find the folders of committed files
 cnt=${#files_to_be_checked[@]}
 for ((i = 0; i < cnt; i++)); do
     folders_to_be_checked[i]=$(dirname ${files_to_be_checked[i]})
@@ -156,41 +145,39 @@ for folder_path in "${unique_folders_to_be_checked[@]}"; do
     classname_with_conflict=0
     class_in_nondefault=0
 
-    for directory in "${DIRECTORIES_TO_CHECK[@]}"; do
-        if [[ $folder_path == $directory/* ]] && [[ $folder_name == @* ]]; then
-            echo -e "\n  ==> Checking ./$(realpath --relative-to=. $folder_path)"
-            all_matches=""
-            i=0
-            for target_dir in "${TARGET_DIRECTORIES[@]}"; do
-                matches=$(find $CBIG_CODE_DIR/$target_dir -name "$folder_name" ! -samefile $CBIG_CODE_DIR/$folder_path)
-                if [[ ${matches} ]]; then
-                    if [ $i == 1 ]; then
-                        all_matches="$matches"
-                    else
-                        all_matches="$all_matches $matches"
-                    fi
-                fi
-            done
-            if [[ ${all_matches} ]]; then
-                # check all matches
-                for match in "${all_matches[@]}"; do
-                    if [[ $match != */non_default_packages/* ]] && [[ $folder_path != */non_default_packages/* ]]; then
-                        classname_with_conflict=1
-                    fi
-                    if [[ $match == */non_default_packages/* ]] || [[ $folder_path == */non_default_packages/* ]]; then
-                        class_in_nondefault=1
-                    fi
-                    echo "!!!Find conflict: $match"
-                done
-                if [[ $classname_with_conflict == 1 ]]; then
-                    echo "[FAILED] Abort pushing."
-                fi
-                if [[ $class_in_nondefault == 1 ]]; then
-                    echo "[WARNING] The user should discuss with the admin about how to handle the conflicts."
+    if [[ $folder_name == @* ]]; then
+        echo -e "\n  ==> Checking ./$(realpath --relative-to=. $folder_path)"
+        all_matches=""
+        i=0
+        for target_dir in "${TARGET_DIRECTORIES[@]}"; do
+            matches=$(find $CBIG_CODE_DIR/$target_dir -name "$folder_name" ! -samefile $CBIG_CODE_DIR/$folder_path)
+            if [[ ${matches} ]]; then
+                if [ $i == 1 ]; then
+                    all_matches="$matches"
+                else
+                    all_matches="$all_matches $matches"
                 fi
             fi
+        done
+        if [[ ${all_matches} ]]; then
+            # check all matches
+            for match in "${all_matches[@]}"; do
+                if [[ $match != */non_default_packages/* ]] && [[ $folder_path != */non_default_packages/* ]]; then
+                    classname_with_conflict=1
+                fi
+                if [[ $match == */non_default_packages/* ]] || [[ $folder_path == */non_default_packages/* ]]; then
+                    class_in_nondefault=1
+                fi
+                echo "!!!Find conflict: $match"
+            done
+            if [[ $classname_with_conflict == 1 ]]; then
+                echo "[FAILED] Abort pushing."
+            fi
+            if [[ $class_in_nondefault == 1 ]]; then
+                echo "[WARNING] The user should discuss with the admin about how to handle the conflicts."
+            fi
         fi
-    done
+    fi
 done
 if [ $classname_with_conflict == 0 -a $class_in_nondefault == 0 ]; then
     echo "  [PASSED]"
