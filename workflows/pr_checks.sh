@@ -194,7 +194,7 @@ exit_flag=0
 
 echo -e "\n==> [Check 4] Checking this project "
 
-source check_project.sh
+source ${PROJ_DIR}/setup/workflows/check_project_structure.sh
 check_project --no-exclude $PROJ_DIR
 
 if [ $exit_flag == 1 ]; then
